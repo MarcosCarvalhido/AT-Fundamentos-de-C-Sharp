@@ -23,18 +23,45 @@ namespace AT_C_Sharp
                     if (!string.IsNullOrEmpty(line))
                     {
                         string[] dados = line.Split(";");
-
-                        Conta conta = new Conta()
+                        if(dados[1] == "pf")
                         {
-                            ID = int.Parse(dados[0]),
-                            Nome = dados[1],
-                            Saldo = decimal.Parse(dados[2])
-                        };
-                        Contas.Add(conta.ID, conta);
+                            CriarContaPF(dados);
+                        }
+                        else
+                        {
+                            CriarContaPj(dados);
+                        }
                     }
                 }
             }
         }
+        //Cria uma conta de tipo pessoa juridica.
+        private static void CriarContaPj(string[] dados)
+        {
+            PessoaJuridica conta = new()
+            {
+                ID = int.Parse(dados[0]),
+                Tipo = dados[1],
+                Nome = dados[2],
+                CNPJ = dados[3],
+                Saldo = decimal.Parse(dados[4])
+            };
+            Contas.Add(conta.ID, conta);
+        }
+        //Cria uma conta de tipo pessoa fisica
+        private static void CriarContaPF(string[] dados)
+        {
+            PessoaFisica conta = new()
+            {
+                ID = int.Parse(dados[0]),
+                Tipo = dados[1],
+                Nome = dados[2],
+                CPF = dados[3],
+                Saldo = decimal.Parse(dados[4])
+            };
+            Contas.Add(conta.ID, conta);
+        }
+
         //Procura uma conta apartir de um ID. Retorna nulo se não achar nenhuma correspondencia.
         public static Conta EncontrarConta(int id)
         {
@@ -47,8 +74,8 @@ namespace AT_C_Sharp
                 return null;
             }
         }
-        //Cria uma conta nova apartir dos dados apresentados.
-        public static void CriarConta(Conta conta)
+        //Adciona uma nova conta a lista de contas.
+        public static void AdcionarConta(Conta conta)
         {
             Contas.Add(conta.ID, conta);
         }
@@ -69,26 +96,10 @@ namespace AT_C_Sharp
                     }
             }
         }
-        //Remove uma conta apartir de um ID. Retorna uma opção se deletada, não encontrada ou com saldo.
-        public static Resposta RemoverConta(int id)
+        //Remove uma conta apartir de um ID.
+        public static void RemoverConta(int id)
         {
-            Conta conta = EncontrarConta(id);
-            if (conta != null)
-            {
-                if (conta.Saldo <= 0)
-                {
-                    Contas.Remove(conta.ID);
-                    return Resposta.Excluida;
-                }
-                else
-                {
-                    return Resposta.PossuiSaldo;
-                }
-            }
-            else
-            {
-                return Resposta.NãoEcontrado;
-            }
+            Contas.Remove(id);
         }
         //Lista todas as contas que possuem um saldo maior que uma quantidade determinada. Ordena resultados de forma crescente.
         public static List<Conta> ListarContasNegativas()
@@ -117,17 +128,19 @@ namespace AT_C_Sharp
             File.Delete(CaminhoarquivoCSV);
             using (StreamWriter outputFile = new StreamWriter(CaminhoarquivoCSV))
             {
-                foreach (var Conta in Contas )
-                    outputFile.WriteLine($"{Conta.Value.ID};{Conta.Value.Nome};{Conta.Value.Saldo}");
+                foreach (var Conta in Contas)
+                {
+                    if (Conta.Value.Tipo=="pf")
+                    {
+                        outputFile.WriteLine($"{Conta.Value.ID};{Conta.Value.Tipo};{((PessoaFisica)Conta.Value).CPF};{Conta.Value.Nome};{Conta.Value.Saldo}");
+                    }
+                    else
+                    {
+                        outputFile.WriteLine($"{Conta.Value.ID};{Conta.Value.Tipo};{((PessoaJuridica)Conta.Value).CNPJ};{Conta.Value.Nome};{Conta.Value.Saldo}");
+                    }
+                }
+              
             }
-        }
-
-        //Lista de opções para a ação de apagar.
-        public enum Resposta
-        {
-            NãoEcontrado = 0,
-            PossuiSaldo = 1,
-            Excluida = 2,
         }
     }
 }

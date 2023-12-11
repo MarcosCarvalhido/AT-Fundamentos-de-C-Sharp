@@ -1,4 +1,6 @@
-﻿namespace AT_C_Sharp
+﻿using System.Text.RegularExpressions;
+
+namespace AT_C_Sharp
 {
     internal class Program
     {
@@ -88,6 +90,14 @@
             Console.WriteLine("[1] - Creditar valor a conta.");
             Console.WriteLine("[2] - Debitar valor a conta.");
         }
+        //Mostra o menu de tipos de conta com as opções disponiveis.
+        public static void MostrarMenuTiposDeConta()
+        {
+            Console.Clear();
+            Console.WriteLine("Escolha uma das opções a seguir:");
+            Console.WriteLine("[1] - Conta de Pessoa Fisica.");
+            Console.WriteLine("[2] - Conta de Pessoa Juridica.");
+        }
         // ----------------------------------------
         //METODOS DE INTERAÇÃO COM O USUARIOS
 
@@ -139,24 +149,19 @@
             int id = int.Parse(VerificarEntradaNumerica(Perguntar("Informe um novo ID para criar a nova conta: ")));
             if (GerenciadorDeConta.EncontrarConta(id) == null)
             {
-                string nome = VerificarEntradaNomes(Perguntar("Informe o nome e sobrenome do titular da conta: "));
-                if (VerificaNomeSobrenome(nome))
+                MostrarMenuTiposDeConta();
+                int tipo = int.Parse(VerificarEntradaNumerica(Perguntar()));
+                if (tipo == 1)
                 {
-                    decimal saldo = decimal.Parse(VerificarEntradaNumerica(Perguntar("Informe o saldo inicial da conta: ")));
-                    if (saldo > 0)
-                    {
-                        CriarConta(id, nome, saldo);
-                        ExibirConta(GerenciadorDeConta.EncontrarConta(id));
-                        Console.WriteLine("Conta Criada com sucesso!");
-                    }
-                    else
-                    {
-                        Console.WriteLine("Uma conta precisa ter um saldo inicial maior do que zero!");
-                    }
+                    CriarContaPF(id);
+                }
+                else if (tipo == 2)
+                {
+                    CriarContaPJ(id);
                 }
                 else
                 {
-                    Console.WriteLine("Uma conta precisa ter pelo menos um nome e um sobrenome!");
+                    Console.WriteLine("Opção invalida!");
                 }
             }
             else
@@ -165,16 +170,108 @@
             }
             ConfirmarContinuar();
         }
-        //Cria uma conta e adciona ao sistema.
-        public static void CriarConta(int id, string nome, decimal saldo)
+        //Recolhe as informações para criar uma conta de tipo Pessoa fisica.
+        private static void CriarContaPF(int id)
         {
-            Conta conta = new()
+            string nome = VerificarEntradaNomes(Perguntar("Informe o nome e sobrenome do titular da conta: "));
+            if (VerificaNomeSobrenome(nome))
+            {
+                string cpf = VerificarEntradaNomes(Perguntar("Informe o CPF do titular da conta, ultilize o formato: (111.111.111-11). "));
+                if (ValidarCPF(cpf))
+                {
+                    decimal saldo = decimal.Parse(VerificarEntradaNumerica(Perguntar("Informe o saldo inicial da conta: ")));
+                    if (saldo > 0)
+                    {
+                        GerarContaPF(cpf,id, nome, saldo);
+                        ExibirConta(GerenciadorDeConta.EncontrarConta(id));
+                        Console.WriteLine("Conta pessoa fisica criada com sucesso!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Uma conta precisa ter um saldo inicial maior do que zero!");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("CPF invalido! Ultilize o formato: (111.111.111-11).");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Uma conta precisa ter pelo menos um nome e um sobrenome!");
+            }
+        } 
+        //Recolhe as informações para criar uma conta de tipo Pessoa Juridica.
+        private static void CriarContaPJ(int id)
+        {
+            string nome = VerificarEntradaNomes(Perguntar("Informe o nome da empresa titular da conta: "));
+            string cnpj = VerificarEntradaNomes(Perguntar("Informe o CNPJ do titular da conta, ultilize o formato: (11.111.111/1111-11). "));
+            if (ValidarCNPJ(cnpj))
+            {
+                decimal saldo = decimal.Parse(VerificarEntradaNumerica(Perguntar("Informe o saldo inicial da conta: ")));
+                if (saldo > 0)
+                {
+                    GerarContaPJ(cnpj,id, nome, saldo);
+                    ExibirConta(GerenciadorDeConta.EncontrarConta(id));
+                    Console.WriteLine("Conta pessoa Juridica criada com sucesso!");
+                }
+                else
+                {
+                    Console.WriteLine("Uma conta precisa ter um saldo inicial maior do que zero!");
+                }
+            }
+            else
+            {
+                Console.WriteLine("CNPJ invalido! ultilize o formato: (11.111.111/1111-11).");
+            }
+        }
+        //Valida o CNPJ informado. 
+        private static bool ValidarCNPJ(string cnpj)
+        {
+            //if (Regex.IsMatch(cnpj, @"/^\\d{3}\\.\\d{3}\\.\\d{3}\\-\\d{2}$/"))
+            //{
+            //    return true;
+            //}
+            //else { return false; }
+            return true;
+        }
+
+        //Valida o CPF informado.
+        private static bool ValidarCPF(string cpf)
+        {
+            //if (Regex.IsMatch(cpf, @"/^\d{3}.?\d{3}.?\d{3}-?\d{2}$/"))
+            //{
+            //    return true;
+            //}
+            //else { return false; 
+            return true;
+        }
+
+        //Cria uma conta pessoa fisica e adciona ao sistema.
+        public static void GerarContaPF(string cpf, int id, string nome, decimal saldo)
+        {
+            PessoaFisica conta = new()
             {
                 ID = id,
+                Tipo = "pf",
                 Nome = nome,
+                CPF = cpf,
                 Saldo = saldo
             };
-            GerenciadorDeConta.CriarConta(conta);
+            GerenciadorDeConta.AdcionarConta(conta);
+        } 
+        //Cria uma conta pessoa juridica e adciona ao sistema.
+        public static void GerarContaPJ(string cnpj, int id, string nome, decimal saldo)
+        {
+            PessoaJuridica conta = new()
+            {
+                ID = id,
+                Tipo = "pj",
+                Nome = nome,
+                CNPJ = cnpj,
+                Saldo = saldo
+            };
+            GerenciadorDeConta.AdcionarConta(conta);
         }
 
         public static void ValidarAlteraçãoDeConta()
@@ -225,26 +322,43 @@
         public static void RemoverConta()
         {
             int id = int.Parse(VerificarEntradaNumerica(Perguntar("Informe o ID da conta que deseja excluir:")));
-            switch (GerenciadorDeConta.RemoverConta(id))
+            Conta conta = GerenciadorDeConta.EncontrarConta(id);
+            if (conta != null)
             {
-                case GerenciadorDeConta.Resposta.Excluida:
-                    {
-                        Console.WriteLine($"Conta de ID {id} excluida com sucesso!");
-                        break;
-                    }
-                case GerenciadorDeConta.Resposta.PossuiSaldo:
-                    {
-                        Console.WriteLine($"Conta de ID {id} possui saldo postivo e não pode ser excluida");
-                        break;
-                    }
-                case GerenciadorDeConta.Resposta.NãoEcontrado:
-                    {
-                        Console.WriteLine($"Conta de ID {id} não foi encontrada");
-                        break;
-                    }
+                if (conta.Saldo <= 0)
+                {
+                    GerenciadorDeConta.RemoverConta(id);
+                    Console.WriteLine($"Conta de ID {id} excluida com sucesso!");
+                }
+                else if (ConfirmarExclusão(id))
+                {
+                    GerenciadorDeConta.RemoverConta(id);
+                    Console.WriteLine($"Conta de ID {id} excluida com sucesso!");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Conta de ID {id} não foi encontrada");
             }
             ConfirmarContinuar();
         }
+        //Verifica a exclusão de uma conta com saldo positivo.
+        private static bool ConfirmarExclusão(int id)
+        {
+            Console.WriteLine($"Conta de ID {id} possui saldo postivo, tem certeza que deseja remove-la?");
+            Console.WriteLine("[1] - Remover mesmo assim");
+            Console.WriteLine("[0] - Cancelar");
+            int entrada = int.Parse(VerificarEntradaNumerica(Perguntar()));
+            if (entrada > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         //Mostra no console as contas com saldos negativos.
         private static void ListarContasNegativas()
         {
@@ -296,7 +410,15 @@
         //Exibe as informações de uma conta.
         private static void ExibirConta(Conta item)
         {
-            Console.WriteLine($"ID: {item.ID}, Nome: {item.Nome}, Saldo: R$:{item.Saldo}");
+            if (item.Tipo == "pf")
+            //{
+            {
+                Console.WriteLine($"ID: {item.ID}, Nome: {item.Nome}, Tipo: {item.Tipo}, CPF: {((PessoaFisica)item).CPF}, Saldo: R$:{item.Saldo}");
+            }
+            else
+            {
+                Console.WriteLine($"ID: {item.ID}, Nome: {item.Nome}, Tipo: {item.Tipo}, CNPJ: {((PessoaJuridica)item).CNPJ}, Saldo: R$:{item.Saldo}");
+            }
         }
         //Mostra a pergunta e recebe a entrada do usuario.
         public static string Perguntar(string pergunta = "")
@@ -355,7 +477,7 @@
                     entrada = Perguntar();
                 } while (!VerificarSeNome(entrada));
             }
-            Console.Clear();    
+            Console.Clear();
             return entrada;
         }
         //Verifica se a entrada é numerica ou não nula.
@@ -367,7 +489,7 @@
                 {
                     decimal numero = decimal.Parse(entrada);
                 }
-                catch (Exception )
+                catch (Exception)
                 {
                     return true;
                 }
