@@ -80,16 +80,16 @@ namespace AT_C_Sharp
             Contas.Add(conta.ID, conta);
         }
         //Altera o valor da conta apartir de um valor informado.
-        public static void AlterarConta(Conta conta, decimal valor, eOperações operação)
+        public static void AlterarConta(Conta conta, decimal valor, Enums.eOperações operação)
         {
             switch (operação)
             {
-                case eOperações.Creditar:
+                case Enums.eOperações.Creditar:
                     {
                         conta.Saldo += valor;
                         break;
                     }
-                case eOperações.Debitar:
+                case Enums.eOperações.Debitar:
                     {
                         conta.Saldo -= valor;
                         break;
